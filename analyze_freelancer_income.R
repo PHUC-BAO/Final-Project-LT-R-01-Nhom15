@@ -25,7 +25,12 @@ if (length(missing_columns) > 0) {
   )
 }
 
-data$income <- as.numeric(data$income)
+income_was_na <- is.na(data$income)
+data$income <- suppressWarnings(as.numeric(data$income))
+coerced_to_na <- sum(!income_was_na & is.na(data$income))
+if (coerced_to_na > 0) {
+  warning(paste(coerced_to_na, "income value(s) could not be parsed as numeric and were ignored."))
+}
 data$industry <- trimws(data$industry)
 valid_income <- !is.na(data$income)
 valid_industry <- !is.na(data$industry) & data$industry != ""
@@ -50,7 +55,7 @@ industry_summary <- aggregate(
 
 industry_summary <- data.frame(
   industry = industry_summary$industry,
-  freelancers = industry_summary$income[, "freelancers"],
+  freelancers = as.integer(industry_summary$income[, "freelancers"]),
   total_income = industry_summary$income[, "total_income"],
   average_income = industry_summary$income[, "average_income"],
   median_income = industry_summary$income[, "median_income"],
