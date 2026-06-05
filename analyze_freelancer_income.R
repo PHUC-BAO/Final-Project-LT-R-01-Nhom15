@@ -7,6 +7,10 @@ if (length(args) < 1) {
 input_csv <- args[1]
 output_csv <- if (length(args) >= 2) args[2] else NA
 
+if (!file.exists(input_csv)) {
+  stop(paste("Input CSV file does not exist:", input_csv))
+}
+
 data <- read.csv(input_csv, stringsAsFactors = FALSE)
 
 required_columns <- c("industry", "income")
