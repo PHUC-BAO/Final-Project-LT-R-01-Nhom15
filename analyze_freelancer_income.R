@@ -29,7 +29,13 @@ income_was_na <- is.na(data$income)
 data$income <- suppressWarnings(as.numeric(data$income))
 coerced_to_na <- sum(!income_was_na & is.na(data$income))
 if (coerced_to_na > 0) {
-  warning(paste(coerced_to_na, "income value(s) could not be parsed as numeric and were ignored."))
+  warning(
+    paste(
+      coerced_to_na,
+      if (coerced_to_na == 1) "income value" else "income values",
+      "could not be parsed as numeric and were ignored."
+    )
+  )
 }
 data$industry <- trimws(data$industry)
 valid_income <- !is.na(data$income)
@@ -55,16 +61,16 @@ industry_summary <- aggregate(
 
 industry_summary <- data.frame(
   industry = industry_summary$industry,
-  freelancers = as.integer(round(industry_summary$income[, "freelancers"])),
-  total_income = industry_summary$income[, "total_income"],
-  average_income = industry_summary$income[, "average_income"],
-  median_income = industry_summary$income[, "median_income"],
-  min_income = industry_summary$income[, "min_income"],
-  max_income = industry_summary$income[, "max_income"],
+  freelancers = as.integer(industry_summary$income[, 1]),
+  total_income = industry_summary$income[, 2],
+  average_income = industry_summary$income[, 3],
+  median_income = industry_summary$income[, 4],
+  min_income = industry_summary$income[, 5],
+  max_income = industry_summary$income[, 6],
   row.names = NULL
 )
 
-industry_summary <- industry_summary[order(-industry_summary$average_income), ]
+industry_summary <- industry_summary[order(industry_summary$average_income, decreasing = TRUE), ]
 
 print(industry_summary, row.names = FALSE)
 
