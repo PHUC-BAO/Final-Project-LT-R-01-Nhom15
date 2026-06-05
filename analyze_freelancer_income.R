@@ -55,7 +55,7 @@ industry_summary <- aggregate(
 
 industry_summary <- data.frame(
   industry = industry_summary$industry,
-  freelancers = as.integer(industry_summary$income[, "freelancers"]),
+  freelancers = as.integer(round(industry_summary$income[, "freelancers"])),
   total_income = industry_summary$income[, "total_income"],
   average_income = industry_summary$income[, "average_income"],
   median_income = industry_summary$income[, "median_income"],
