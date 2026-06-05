@@ -12,7 +12,7 @@ Trong bài báo cáo, nhóm 17 chúng em lựa chọn một tập dữ liệu th
 - **Tên dataset**: freelancer_earnings_bd.csv
 - **Nguồn**: Kaggle
 - **Link**: [Freelancer Earnings & Job Trends](https://www.kaggle.com/datasets/shohinurpervezshohan/freelancer-earnings-and-job-trends)
-- **Mục đích của dataset**: iúp người tìm việc, người làm việc tự do và các nhà nghiên cứu hiểu rõ hơn về mô hình thù lao và nhu cầu trong nền kinh tế việc làm tự do (gig economy)
+- **Mục đích của dataset**: Giúp người tìm việc, người làm việc tự do và các nhà nghiên cứu hiểu rõ hơn về mô hình thù lao và nhu cầu trong nền kinh tế việc làm tự do (gig economy)
 
 ### Mô tả dữ liệu
 - Dataset bao gồm các cột chính:
