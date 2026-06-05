@@ -23,7 +23,9 @@ if (length(missing_columns) > 0) {
 
 data$income <- as.numeric(data$income)
 data$industry <- trimws(data$industry)
-data <- data[!is.na(data$income) & !is.na(data$industry) & data$industry != "", ]
+valid_income <- !is.na(data$income)
+valid_industry <- !is.na(data$industry) & data$industry != ""
+data <- data[valid_income & valid_industry, ]
 
 if (nrow(data) == 0) {
   stop("No valid records found after filtering invalid industry or income values.")
