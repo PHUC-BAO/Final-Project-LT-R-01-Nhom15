@@ -14,9 +14,9 @@
 
 ## 2. 🎯 Giới thiệu đề tài
 
-> **"Phân tích các yếu tố ảnh hưởng đến thu nhập của Freelancer toàn cầu"**
+> **"Phân tích các yếu tố ảnh hưởng đến thu nhập của Freelancer"**
 
-Trong bài báo cáo này, nhóm 17 lựa chọn tập dữ liệu thực tế từ Kaggle về thu nhập và xu hướng việc làm của Freelancer toàn cầu để thực hiện phân tích toàn diện — từ khám phá dữ liệu, trực quan hóa đến xây dựng mô hình dự đoán bằng ngôn ngữ R.
+Trong bài báo cáo này, nhóm 17 lựa chọn tập dữ liệu thực tế từ Kaggle về thu nhập và xu hướng việc làm của Freelancer để thực hiện phân tích toàn diện — từ khám phá dữ liệu, trực quan hóa đến xây dựng mô hình dự đoán bằng ngôn ngữ R.
 
 ### Mục tiêu
 - Xác định các yếu tố ảnh hưởng lớn nhất đến thu nhập của Freelancer
