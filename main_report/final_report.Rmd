@@ -1,5 +1,5 @@
 ---
-title: "Phân tích các yếu tố ảnh hưởng đến thu nhập của Freelancer toàn cầu"
+title: "Phân tích các yếu tố ảnh hưởng đến thu nhập của Freelancer"
 subtitle: "Final Project – Lập trình R | Nhóm 17"
 date: "`r format(Sys.Date(), '%d tháng %m, %Y')`"
 output:
