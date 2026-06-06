@@ -118,6 +118,4 @@ install.packages(c("tidyverse", "ggplot2", "caret", "knitr"))
 
 # 4. Knit báo cáo hoàn chỉnh
 rmarkdown::render("main_report/final_report.Rmd")
-```
 
-```
