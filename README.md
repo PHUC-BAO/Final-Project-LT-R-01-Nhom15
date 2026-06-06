@@ -37,7 +37,7 @@ Trong bài báo cáo, nhóm 17 chúng em lựa chọn một tập dữ liệu th
 ## 5. Công nghệ sử dụng
 
 ## 6. Cấu trúc thư mục và chương trình
-
+```text
 Final-Project-LT-R-01-Nhom15/
 │
 ├── data/
@@ -56,3 +56,4 @@ Final-Project-LT-R-01-Nhom15/
 │   └── final_report.Rmd
 │
 └── README.md
+```
