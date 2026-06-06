@@ -121,7 +121,3 @@ rmarkdown::render("main_report/final_report.Rmd")
 ```
 
 ```
-
----
-
-*Đồ án môn Lập trình R cho phân tích — Nhóm 15*
