@@ -1,1 +1,359 @@
+---
+title: "01 - Data Cleaning & Exploratory Data Analysis"
+author: "Nhóm 17"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: flatly
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE,
+                      fig.width = 9, fig.height = 5)
+```
+
+# 1. Đọc dữ liệu & Kiểm tra tổng quát
+
+```{r load-data}
+library(tidyverse)
+library(scales)
+library(ggthemes)
+
+freelancer <- read.csv("../data/freelancer_earnings_bd.csv")
+
+# Kích thước dữ liệu
+cat("Số dòng:", nrow(freelancer), "\n")
+cat("Số cột: ", ncol(freelancer), "\n")
+```
+
+```{r glimpse}
+glimpse(freelancer)
+```
+
+# 2. Data Cleaning
+
+## 2.1 Kiểm tra kiểu dữ liệu & Chuyển đổi
+
+```{r convert-types}
+# Chuyển biến phân loại sang factor
+freelancer <- freelancer %>%
+  mutate(
+    Job_Category      = as.factor(Job_Category),
+    Platform          = as.factor(Platform),
+    Experience_Level  = factor(Experience_Level,
+                               levels = c("Beginner", "Intermediate", "Expert")),
+    Client_Region     = as.factor(Client_Region),
+    Payment_Method    = as.factor(Payment_Method),
+    Project_Type      = as.factor(Project_Type)
+  )
+
+glimpse(freelancer)
+```
+
+## 2.2 Kiểm tra giá trị NA
+
+```{r check-na}
+na_summary <- colSums(is.na(freelancer))
+na_summary
+```
+
+```{r na-plot}
+na_df <- tibble(
+  column = names(na_summary),
+  na_count = as.integer(na_summary)
+)
+
+ggplot(na_df, aes(x = reorder(column, na_count), y = na_count)) +
+  geom_col(fill = "steelblue") +
+  coord_flip() +
+  labs(title = "Số lượng giá trị NA theo cột",
+       x = NULL, y = "Số NA") +
+  theme_minimal()
+```
+
+> **Kết quả:** Không có giá trị NA trong bộ dữ liệu.
+
+## 2.3 Kiểm tra giá trị trùng lặp
+
+```{r check-duplicates}
+cat("Số dòng trùng lặp:", sum(duplicated(freelancer)), "\n")
+```
+
+## 2.4 Phát hiện Outlier (IQR method)
+
+```{r outlier-function}
+count_outliers <- function(x) {
+  Q1 <- quantile(x, 0.25)
+  Q3 <- quantile(x, 0.75)
+  IQR_val <- Q3 - Q1
+  sum(x < (Q1 - 1.5 * IQR_val) | x > (Q3 + 1.5 * IQR_val))
+}
+
+numeric_vars <- c("Earnings_USD", "Hourly_Rate", "Job_Completed",
+                  "Job_Success_Rate", "Client_Rating",
+                  "Job_Duration_Days", "Rehire_Rate", "Marketing_Spend")
+
+outlier_counts <- freelancer %>%
+  select(all_of(numeric_vars)) %>%
+  summarise(across(everything(), count_outliers)) %>%
+  pivot_longer(everything(), names_to = "Variable", values_to = "Outlier_Count")
+
+outlier_counts
+```
+
+```{r boxplot-outliers, fig.height=6}
+freelancer %>%
+  select(all_of(numeric_vars)) %>%
+  pivot_longer(everything(), names_to = "Variable", values_to = "Value") %>%
+  ggplot(aes(x = Variable, y = Value)) +
+  geom_boxplot(outlier.colour = "red", outlier.size = 0.8) +
+  facet_wrap(~Variable, scales = "free", ncol = 4) +
+  labs(title = "Boxplot phát hiện Outlier theo từng biến số",
+       x = NULL, y = NULL) +
+  theme_minimal() +
+  theme(axis.text.x = element_blank())
+```
+
+> **Nhận xét:** Outlier được giữ nguyên vì chúng phản ánh sự chênh lệch thực tế trong thu nhập và hành vi làm việc của freelancer (không phải lỗi nhập liệu).
+
+---
+
+# 3. Thống kê mô tả (Summary Statistics)
+
+```{r summary-stats}
+summary(freelancer %>% select(all_of(numeric_vars)))
+```
+
+```{r desc-table}
+desc_stats <- freelancer %>%
+  select(all_of(numeric_vars)) %>%
+  summarise(across(everything(), list(
+    Min    = min,
+    Q1     = ~quantile(., 0.25),
+    Median = median,
+    Mean   = mean,
+    Q3     = ~quantile(., 0.75),
+    Max    = max,
+    SD     = sd
+  ), .names = "{.col}__{.fn}")) %>%
+  # Reshape: wide → long → wide để có dạng Variable x Stat
+  pivot_longer(everything(),
+               names_to  = c("Variable", "Stat"),
+               names_sep = "__") %>%
+  pivot_wider(names_from = Stat, values_from = value)
+
+desc_stats %>%
+  mutate(across(where(is.numeric), ~round(., 2)))
+```
+
+---
+
+# 4. Phân phối các biến chính
+
+## 4.1 Earnings_USD (Thu nhập)
+
+```{r dist-earnings}
+ggplot(freelancer, aes(x = Earnings_USD)) +
+  geom_histogram(bins = 40, fill = "steelblue", color = "white") +
+  geom_vline(aes(xintercept = median(Earnings_USD)),
+             color = "red", linetype = "dashed", linewidth = 0.8) +
+  annotate("text", x = median(freelancer$Earnings_USD) + 300,
+           y = Inf, vjust = 2,
+           label = paste0("Median: $", comma(median(freelancer$Earnings_USD))),
+           color = "red", size = 3.5) +
+  scale_x_continuous(labels = dollar) +
+  labs(title = "Phân phối Thu nhập (Earnings_USD)",
+       x = "Thu nhập (USD)", y = "Số lượng") +
+  theme_minimal()
+```
+
+## 4.2 Hourly_Rate (Mức lương theo giờ)
+
+```{r dist-hourly}
+ggplot(freelancer, aes(x = Hourly_Rate)) +
+  geom_histogram(bins = 40, fill = "darkorange", color = "white") +
+  geom_vline(aes(xintercept = median(Hourly_Rate)),
+             color = "darkred", linetype = "dashed", linewidth = 0.8) +
+  annotate("text", x = median(freelancer$Hourly_Rate) + 2,
+           y = Inf, vjust = 2,
+           label = paste0("Median: $", round(median(freelancer$Hourly_Rate), 1), "/h"),
+           color = "darkred", size = 3.5) +
+  labs(title = "Phân phối Mức lương theo giờ (Hourly_Rate)",
+       x = "Hourly Rate (USD/giờ)", y = "Số lượng") +
+  theme_minimal()
+```
+
+## 4.3 Job_Completed (Số công việc hoàn thành)
+
+```{r dist-jobs}
+ggplot(freelancer, aes(x = Job_Completed)) +
+  geom_histogram(bins = 40, fill = "seagreen", color = "white") +
+  geom_vline(aes(xintercept = median(Job_Completed)),
+             color = "darkgreen", linetype = "dashed", linewidth = 0.8) +
+  annotate("text", x = median(freelancer$Job_Completed) + 5,
+           y = Inf, vjust = 2,
+           label = paste0("Median: ", median(freelancer$Job_Completed)),
+           color = "darkgreen", size = 3.5) +
+  labs(title = "Phân phối Số công việc hoàn thành (Job_Completed)",
+       x = "Số công việc", y = "Số lượng") +
+  theme_minimal()
+```
+
+---
+
+# 5. Phân bố theo biến phân loại
+
+## 5.1 Theo Experience_Level (Cấp độ kinh nghiệm)
+
+```{r by-experience, fig.height=7}
+p1 <- freelancer %>%
+  group_by(Experience_Level) %>%
+  summarise(Median_Earnings = median(Earnings_USD), .groups = "drop") %>%
+  ggplot(aes(x = Experience_Level, y = Median_Earnings, fill = Experience_Level)) +
+  geom_col(show.legend = FALSE) +
+  scale_y_continuous(labels = dollar) +
+  labs(title = "Thu nhập trung vị theo Cấp độ kinh nghiệm",
+       x = NULL, y = "Median Earnings (USD)") +
+  theme_minimal()
+
+p2 <- ggplot(freelancer, aes(x = Earnings_USD, fill = Experience_Level)) +
+  geom_density(alpha = 0.5) +
+  scale_x_continuous(labels = dollar) +
+  labs(title = "Phân phối Thu nhập theo Cấp độ kinh nghiệm",
+       x = "Earnings (USD)", y = "Mật độ", fill = "Experience Level") +
+  theme_minimal()
+
+p3 <- ggplot(freelancer, aes(x = Experience_Level, y = Hourly_Rate,
+                              fill = Experience_Level)) +
+  geom_boxplot(show.legend = FALSE) +
+  labs(title = "Hourly Rate theo Cấp độ kinh nghiệm",
+       x = NULL, y = "Hourly Rate (USD/h)") +
+  theme_minimal()
+
+# p2 chiếm cả hàng dưới (span 2 cột)
+gridExtra::grid.arrange(p1, p2, p3, nrow = 2,
+                         layout_matrix = rbind(c(1, 3), c(2, 2)))
+```
+
+## 5.2 Theo Job_Category (Danh mục công việc)
+
+```{r by-category, fig.height=6}
+freelancer %>%
+  group_by(Job_Category) %>%
+  summarise(
+    Median_Earnings = median(Earnings_USD),
+    Median_Hourly   = median(Hourly_Rate),
+    Count           = n(),
+    .groups = "drop"
+  ) %>%
+  arrange(desc(Median_Earnings)) %>%
+  ggplot(aes(x = reorder(Job_Category, Median_Earnings),
+             y = Median_Earnings)) +
+  geom_col(aes(fill = Median_Hourly)) +
+  geom_text(aes(label = dollar(Median_Earnings)), hjust = -0.1, size = 3) +
+  scale_fill_gradient(low = "lightyellow", high = "darkorange",
+                      name = "Median\nHourly Rate") +
+  # Thêm 15% khoảng trống phía trên để label geom_text không bị cắt
+  scale_y_continuous(labels = dollar, expand = expansion(mult = c(0, 0.15))) +
+  coord_flip() +
+  labs(title = "Thu nhập trung vị theo Danh mục công việc",
+       subtitle = "Màu thể hiện mức lương theo giờ",
+       x = NULL, y = "Median Earnings (USD)") +
+  theme_minimal()
+```
+
+```{r category-boxplot, fig.height=5}
+# Tham số thứ 3 chỉ định hàm sắp xếp (mặc định là mean, đây dùng median)
+ggplot(freelancer, aes(x = reorder(Job_Category, Earnings_USD, median),
+                       y = Earnings_USD)) +
+  geom_boxplot(fill = "lightblue", outlier.colour = "red", outlier.size = 0.7) +
+  scale_y_continuous(labels = dollar) +
+  coord_flip() +
+  labs(title = "Phân phối Thu nhập theo Danh mục công việc",
+       x = NULL, y = "Earnings (USD)") +
+  theme_minimal()
+```
+
+## 5.3 Theo Platform (Nền tảng)
+
+```{r by-platform, fig.height=6}
+platform_summary <- freelancer %>%
+  group_by(Platform) %>%
+  summarise(
+    Count           = n(),
+    Median_Earnings = median(Earnings_USD),
+    Median_Hourly   = median(Hourly_Rate),
+    Median_Jobs     = median(Job_Completed),
+    .groups = "drop"
+  ) %>%
+  arrange(desc(Median_Earnings))
+
+platform_summary
+```
+
+```{r platform-bar}
+ggplot(platform_summary,
+       aes(x = reorder(Platform, Median_Earnings), y = Median_Earnings)) +
+  geom_col(fill = "steelblue") +
+  geom_text(aes(label = dollar(Median_Earnings)), hjust = -0.1, size = 3.5) +
+  scale_y_continuous(labels = dollar, expand = expansion(mult = c(0, 0.2))) +
+  coord_flip() +
+  labs(title = "Thu nhập trung vị theo Nền tảng (Platform)",
+       x = NULL, y = "Median Earnings (USD)") +
+  theme_minimal()
+```
+
+```{r platform-distribution, fig.height=5}
+ggplot(freelancer, aes(x = Earnings_USD, fill = Platform)) +
+  geom_density(alpha = 0.45) +
+  scale_x_continuous(labels = dollar) +
+  labs(title = "Phân phối Thu nhập theo Nền tảng",
+       x = "Earnings (USD)", y = "Mật độ") +
+  theme_minimal()
+```
+
+```{r platform-count}
+ggplot(freelancer, aes(y = Platform, fill = Experience_Level)) +
+  geom_bar(position = "fill") +
+  scale_x_continuous(labels = percent) +
+  labs(title = "Tỷ lệ Cấp độ kinh nghiệm theo Nền tảng",
+       x = "Tỷ lệ", y = NULL, fill = "Experience Level") +
+  theme_minimal()
+```
+
+---
+
+# 6. Tóm tắt Cleaning & EDA
+
+```{r summary-table}
+tibble(
+  `Hạng mục`   = c("Số quan sát", "Số biến", "Giá trị NA", "Dòng trùng lặp",
+                    "Biến số (numeric)", "Biến phân loại (factor)"),
+  `Kết quả`    = c(nrow(freelancer), ncol(freelancer),
+                    sum(is.na(freelancer)), sum(duplicated(freelancer)),
+                    sum(sapply(freelancer, is.numeric)),
+                    sum(sapply(freelancer, is.factor)))
+)
+```
+
+> **Nhận xét tổng quan:**
+>
+> - Dữ liệu **sạch**: không có NA, không trùng lặp.  
+> - Thu nhập (`Earnings_USD`) và mức lương theo giờ (`Hourly_Rate`) có phân phối **lệch phải** nhẹ.  
+> - Freelancer cấp **Expert** không nhất thiết kiếm nhiều hơn **Intermediate** — có thể do số lượng job hoàn thành đóng vai trò lớn hơn.  
+> - Nền tảng có sự khác biệt nhất định về thu nhập trung vị, cần phân tích sâu hơn ở các bước tiếp theo.
+
+---
+
+# 7. Xuất dữ liệu đã làm sạch
+
+```{r export-data}
+# Lưu dạng RDS để giữ nguyên kiểu factor và thứ tự level
+saveRDS(freelancer, "../data/freelancer_clean.rds")
+
+cat("Số dòng:", nrow(freelancer), "| Số cột:", ncol(freelancer), "\n")
+```
 
