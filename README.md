@@ -38,3 +38,21 @@ Trong bài báo cáo, nhóm 17 chúng em lựa chọn một tập dữ liệu th
 
 ## 6. Cấu trúc thư mục và chương trình
 
+Final-Project-LT-R-01-Nhom15/
+│
+├── data/
+│   └── freelancer_earnings_bd.csv
+│
+├── 01_cleaning_eda/
+│   ├── 01_cleaning_eda.Rmd
+│
+├── 02_visualization/
+│   ├── 02_visualization.Rmd
+│
+├── 03_modeling/
+│   ├── 03_modeling.Rmd
+│
+├── main_report/
+│   └── final_report.Rmd
+│
+└── README.md
