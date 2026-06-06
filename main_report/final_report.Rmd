@@ -1,1 +1,35 @@
+---
+title: "Phân tích các yếu tố ảnh hưởng đến thu nhập của Freelancer toàn cầu"
+subtitle: "Final Project – Lập trình R | Nhóm 17"
+date: "`r format(Sys.Date(), '%d tháng %m, %Y')`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    theme: flatly
+    highlight: tango
+    number_sections: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE,
+                      fig.width = 9, fig.height = 5)
+```
+
+---
+
+> **Bộ dữ liệu:** `freelancer_earnings_bd.csv` — 1.950 quan sát, 15 biến  
+> **Mục tiêu:** Khám phá các yếu tố ảnh hưởng đến thu nhập của freelancer trên các nền tảng trực tuyến.
+
+---
+
+```{r child = "../01_cleaning_eda/01_cleaning_eda.Rmd"}
+```
+
+```{r child = "../02_visualization/02_visualization.Rmd"}
+```
+
+```{r child = "../03_modeling/03_modeling.Rmd"}
+```
 
