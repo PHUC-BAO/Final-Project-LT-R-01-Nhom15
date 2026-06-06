@@ -70,7 +70,7 @@ Final-Project-LT-R-01-Nhom15/
 │
 ├── data/
 │   ├── freelancer_earnings_bd.csv     # Dữ liệu gốc
-│   └── freelancer_clean.rds               # Dữ liệu sau khi làm sạch 
+│   └── freelancer_clean.rds           # Dữ liệu sau khi làm sạch 
 │
 ├── 01_cleaning_eda/
 │   ├── 01_cleaning_eda.Rmd
