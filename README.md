@@ -5,11 +5,11 @@
 
 ## 1. 👥 Thành viên nhóm
 
-| Họ và tên | MSSV |
-|-----------|------|
-| Trần Phúc Bảo | 24133005 |
-| Lê Hồ Quốc Huy | 22133025 |
-| Phạm Đức Khoa | 24149170 |
+| Họ và tên | MSSV |Phân Công|
+|-----------|------|---------|
+| Trần Phúc Bảo | 24133005 | Làm sạch & Phân tích khám phá dữ liệu |
+| Lê Hồ Quốc Huy | 22133025 | Trực quan hóa dữ liệu |
+| Phạm Đức Khoa | 24149170 | Mô hình hóa dữ liệu |
 ---
 
 ## 2. 🎯 Giới thiệu đề tài
