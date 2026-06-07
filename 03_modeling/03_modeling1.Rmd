@@ -1,0 +1,166 @@
+---
+title: "03 - Modeling & Conclusion"
+author: "Nhóm 17"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: flatly
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+# 1 Đọc dữ liệu
+```{r load-data}
+library(tidyverse)
+library(caret)
+library(broom)
+library(lmtest)
+library(sandwich)
+library(ggplot2)
+
+freelancer <- readRDS("data/freelancer_clean.rds")
+
+# Kích thước dữ liệu
+cat("Số dòng:", nrow(freelancer), "\n")
+cat("Số cột: ", ncol(freelancer), "\n")
+glimpse(freelancer)
+```
+
+# 2 Chuẩn bị dữ liệu 
+# 2.1 Phân loại thu nhập
+```{r}
+median_income <- median(freelancer$Earnings_USD)
+
+freelancer <- freelancer %>%
+  mutate(
+    Income_Level = ifelse(Earnings_USD >= median_income, "High", "Low"),
+    Income_Level = factor(Income_Level)
+  )
+```
+
+# 2.2 Chia Train - Test 
+```{r}
+set.seed(123)
+
+train_index <- createDataPartition(freelancer$Earnings_USD, p = 0.8, list = FALSE)
+
+train <- freelancer[train_index, ]
+test  <- freelancer[-train_index, ]
+```
+
+# 3 Dự đoán Earnings_USD
+# 3.1 Train model
+```{r}
+model_lm <- lm(
+  Earnings_USD ~ Hourly_Rate +
+    Job_Completed +
+    Experience_Level +
+    Marketing_Spend +
+    Job_Success_Rate +
+    Client_Rating,
+  data = train
+)
+
+summary(model_lm)
+```
+
+# 3.2 Đánh giá model
+```{r}
+pred_lm <- predict(model_lm, test)
+
+rmse <- sqrt(mean((test$Earnings_USD - pred_lm)^2))
+r2 <- cor(test$Earnings_USD, pred_lm)^2
+
+rmse
+r2
+```
+
+# 3.3 Biểu đồ residual
+```{r}
+res_df <- data.frame(
+  fitted = pred_lm,
+  residuals = test$Earnings_USD - pred_lm
+)
+
+ggplot(res_df, aes(x = fitted, y = residuals)) +
+  geom_point(alpha = 0.5) +
+  geom_hline(yintercept = 0, color = "red") +
+  labs(
+    title = "Residual Plot - Linear Regression",
+    x = "Giá trị dự đoán",
+    y = "Sai số"
+  ) +
+  theme_minimal()
+```
+> Nhận xét: 
+
+>  Sai số phân bố tương đối ngẫu nhiên quanh 0 
+>  Không có pattern rõ ràng → mô hình tuyến tính phù hợp 
+
+# 4 Logistic Regression
+# 4.1 Xây dựng mô hình
+```{r}
+model_logit <- glm(
+  Income_Level ~ Hourly_Rate +
+    Job_Completed +
+    Experience_Level +
+    Marketing_Spend,
+  data = train,
+  family = binomial
+)
+
+summary(model_logit)
+```
+
+# 4.2 Confusion Matrix
+```{r}
+prob <- predict(model_logit, test, type = "response")
+
+pred_class <- ifelse(prob > 0.5, "High", "Low")
+pred_class <- factor(pred_class)
+
+confusionMatrix(pred_class, test$Income_Level)
+```
+>Nhận xét:
+
+> Mô hình phân loại tương đối tốt giữa High và Low income
+> Accuracy ở mức chấp nhận được
+> Một số trường hợp bị nhầm do hai nhóm có đặc điểm chồng lấn
+
+# 5 Feature Importance (Linear Model)
+```{r}
+tidy(model_lm) %>%
+  arrange(desc(abs(estimate)))
+```
+
+# 6 Kết luận
+> **Nhận xét tổng quan:**
+>Thu nhập freelancer phụ thuộc mạnh nhất vào:
+    Hourly_Rate
+    Job_Completed
+>Marketing_Spend có ảnh hưởng nhưng không quá lớn
+>Experience_Level chỉ đóng vai trò hỗ trợ
+
+> **Kết luận chung**:
+> Năng suất làm việc và giá trị dịch vụ là yếu tố quyết định thu nhập freelancer
+> Kinh nghiệm không phải yếu tố chính nếu hiệu suất thấp
+
+# 7. Ý nghĩa thực tiễn (Practical Implications)
+
+Kết quả phân tích mang lại một số hàm ý thực tiễn như sau:
+
+- Đối với freelancer:
+  Thu nhập phụ thuộc chủ yếu vào mức giá theo giờ (Hourly_Rate) và số lượng công việc hoàn thành (Job_Completed). Vì vậy, freelancer nên tập trung vào việc nâng cao năng suất và tối ưu mức giá dịch vụ thay vì chỉ dựa vào kinh nghiệm.
+
+- Đối với nền tảng freelance:
+  Các nền tảng có thể cải thiện hệ sinh thái bằng cách khuyến khích freelancer tăng hiệu suất làm việc, đồng thời cung cấp công cụ hỗ trợ định giá hợp lý dựa trên thị trường.
+
+- Đối với khách hàng:
+  Kết quả cho thấy mức giá và hiệu suất làm việc có liên quan chặt chẽ đến thu nhập, do đó khách hàng có thể đánh giá freelancer hiệu quả hơn thông qua số lượng dự án đã hoàn thành thay vì chỉ dựa vào kinh nghiệm.
+
+ Nhìn chung, năng suất lao động và giá trị dịch vụ là hai yếu tố quan trọng nhất quyết định thu nhập trong thị trường freelancer.
