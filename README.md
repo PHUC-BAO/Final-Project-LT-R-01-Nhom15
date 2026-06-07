@@ -112,9 +112,12 @@ git clone https://github.com/PHUC-BAO/Final-Project-LT-R-01-Nhom17.git
 install.packages(c("tidyverse", "ggplot2", "caret", "knitr"))
 
 # 3. Chạy lần lượt theo thứ tự
+# Cách 1:
 #    Bước 1: knit 01_cleaning_eda.Rmd  → tạo freelancer_clean.rds
 #    Bước 2: knit 02_visualization.Rmd
 #    Bước 3: knit 03_modeling.Rmd
+# Cách 2: (Ưu tiên)
+#    knit final_report.Rmd -> Gọi các file đã phân tích
 
 # 4. Knit báo cáo hoàn chỉnh
 rmarkdown::render("main_report/final_report.Rmd")
