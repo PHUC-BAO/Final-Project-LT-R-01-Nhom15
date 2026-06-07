@@ -10,7 +10,7 @@ output:
     highlight: tango
 ---
 
-```{r setup-, include=FALSE}
+```{r setup-mod, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE,
                       fig.width = 9, fig.height = 5)
 ```
