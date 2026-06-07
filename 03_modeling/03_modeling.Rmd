@@ -23,7 +23,7 @@ library(lmtest)
 library(sandwich)
 library(ggplot2)
 
-freelancer <- readRDS("data/freelancer_clean.rds")
+freelancer <- readRDS("../data/freelancer_clean.rds")
 
 # Kích thước dữ liệu
 cat("Số dòng:", nrow(freelancer), "\n")
