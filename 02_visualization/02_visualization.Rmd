@@ -1,1 +1,343 @@
+---
+title: "02 - Data Visualization"
+author: "Nhóm 17"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: flatly
+    highlight: tango
+editor_options: 
+  markdown: 
+    wrap: 72
+---
 
+```{r setup-vis, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE,
+                      fig.width = 9, fig.height = 6)
+```
+
+# 1. Chuẩn bị dữ liệu & Thư viện
+
+Ở phần trước, dữ liệu đã được làm sạch và lưu trữ dưới dạng file `.rds`
+để bảo toàn kiểu dữ liệu và cấu trúc phân loại. Chúng ta sẽ tải các thư
+viện cần thiết và nạp dữ liệu sạch này để phục vụ cho các phân tích trực
+quan nâng cao.
+
+```{r load-packages-data}
+library(tidyverse)
+library(scales)
+library(ggthemes)
+library(viridis)
+
+# Nạp dữ liệu sạch từ Phần 1
+freelancer <- readRDS("../data/freelancer_clean.rds")
+```
+
+------------------------------------------------------------------------
+
+# 2. Phân tích Trực quan hóa dữ liệu
+
+## 2.1 So sánh thu nhập (Earnings_USD) theo các biến phân loại
+
+Để so sánh trực quan và hiểu rõ sự biến động thu nhập theo từng nhóm,
+chúng ta sẽ kết hợp **Violin Plot** (thể hiện hình dạng mật độ phân
+phối) và **Boxplot** lồng bên trong (thể hiện các mốc thống kê quan
+trọng và giá trị ngoại lai).
+
+### a. Theo Nền tảng (Platform)
+
+```{r vis-platform}
+ggplot(freelancer, aes(x = Platform, y = Earnings_USD, fill = Platform)) +
+  geom_violin(alpha = 0.35, color = NA) +
+  geom_boxplot(width = 0.18, alpha = 0.7, outlier.colour = "red", outlier.size = 1.2) +
+  scale_y_continuous(labels = dollar) +
+  scale_fill_viridis_d(option = "plasma") +
+  labs(title = "Phân phối thu nhập theo Nền tảng (Platform)",
+       subtitle = "Sự kết hợp giữa Violin Plot và Boxplot",
+       x = "Nền tảng", y = "Thu nhập (USD)") +
+  theme_minimal() +
+  theme(legend.position = "none",
+        plot.title = element_text(face = "bold", size = 14))
+```
+
+> **Nhận định chi tiết:**
+>
+> - **Quan sát trực quan:** Hình dáng của các biểu đồ Violin Plot gần
+>   như tương đồng nhau trên tất cả 5 nền tảng (Fiverr, Freelancer,
+>   Upwork, Toptal, PeoplePerHour). Không có nền tảng nào thể hiện sự
+>   phình to (tập trung đông đảo) ở một mức thu nhập cụ thể. Boxplot
+>   lồng bên trong cũng cho thấy mức thu nhập trung vị (đường gạch ngang
+>   đậm) dao động xoay quanh mốc \$5,000 một cách khá đồng đều.
+>
+> - **Phân tích ý nghĩa:** Dữ liệu cho thấy nền tảng làm việc không tạo
+>   ra sự phân hóa quá lớn về mặt thu nhập. Một freelancer hoàn toàn có
+>   thể kiếm được mức thu nhập \$10,000 (mức cao nhất) ở bất kỳ nền tảng
+>   nào, miễn là họ có chiến lược phù hợp. Sự biến thiên rộng từ \$0 đến
+>   \$10,000 cho thấy thu nhập phụ thuộc vào năng lực cá nhân thay vì
+>   "mác" của nền tảng.
+>
+> - **Hàm ý thực tiễn:** Đối với một freelancer mới bắt đầu, việc chọn
+>   nền tảng nào không quan trọng bằng việc xây dựng hồ sơ năng lực tốt.
+>   Không có nền tảng nào là "mỏ vàng" hiển nhiên, cũng không có nền
+>   tảng nào là "đáy" của thị trường.
+
+### b. Theo Danh mục công việc (Job_Category)
+
+```{r vis-category}
+ggplot(freelancer, aes(x = reorder(Job_Category, Earnings_USD, median), y = Earnings_USD, fill = Job_Category)) +
+  geom_violin(alpha = 0.35, color = NA) +
+  geom_boxplot(width = 0.18, alpha = 0.7, outlier.colour = "red", outlier.size = 1.2) +
+  scale_y_continuous(labels = dollar) +
+  scale_fill_viridis_d(option = "mako") +
+  coord_flip() +
+  labs(title = "Phân phối thu nhập theo Danh mục công việc",
+       subtitle = "Sắp xếp theo thứ tự Thu nhập trung vị tăng dần",
+       x = NULL, y = "Thu nhập (USD)") +
+  theme_minimal() +
+  theme(legend.position = "none",
+        plot.title = element_text(face = "bold", size = 14))
+```
+
+> **Nhận định chi tiết:**
+>
+> - **Quan sát trực quan:** Khi sắp xếp theo mức thu nhập trung vị tăng
+>   dần, các ngành liên quan đến công nghệ như *App Development* và *Web
+>   Development* đang dẫn đầu (hộp Boxplot dịch về phía bên phải). Trong
+>   khi đó, các ngành dịch vụ hỗ trợ như *Data Entry* hoặc *Customer
+>   Support* có mức trung vị thấp hơn một chút.
+>
+> - **Phân tích ý nghĩa:** Sự chênh lệch này phản ánh đúng quy luật
+>   cung - cầu và hàm lượng chất xám của thị trường. Các công việc đòi
+>   hỏi kỹ năng lập trình chuyên sâu thường có rào cản gia nhập cao, dẫn
+>   đến đơn giá (rate) tốt hơn. Tuy nhiên, hình dáng Violin dàn đều cho
+>   thấy ở ngành *Data Entry* vẫn có những cá nhân đạt mức thu nhập chạm
+>   ngưỡng tối đa (\$10,000), có thể nhờ vào khối lượng công việc khổng
+>   lồ hoặc khả năng tối ưu hóa tự động hóa cá nhân.
+>
+> - **Hàm ý thực tiễn:** Nếu mục tiêu là tối đa hóa thu nhập trung bình,
+>   freelancer nên đầu tư học hỏi các kỹ năng lập trình. Dù vậy, những
+>   người làm nghề viết lách (Content Writing) hoặc thiết kế (Graphic
+>   Design) vẫn hoàn toàn có cơ hội đạt đỉnh thu nhập nếu họ tìm được
+>   phân khúc khách hàng cao cấp.
+
+### c. Theo Khu vực khách hàng (Client_Region)
+
+```{r vis-region}
+ggplot(freelancer, aes(x = reorder(Client_Region, Earnings_USD, median), y = Earnings_USD, fill = Client_Region)) +
+  geom_violin(alpha = 0.35, color = NA) +
+  geom_boxplot(width = 0.18, alpha = 0.7, outlier.colour = "red", outlier.size = 1.2) +
+  scale_y_continuous(labels = dollar) +
+  scale_fill_viridis_d(option = "viridis") +
+  labs(title = "Phân phối thu nhập theo Khu vực của Khách hàng",
+       x = "Khu vực khách hàng", y = "Thu nhập (USD)") +
+  theme_minimal() +
+  theme(legend.position = "none",
+        axis.text.x = element_text(angle = 30, hjust = 1),
+        plot.title = element_text(face = "bold", size = 14))
+```
+
+> **Nhận định chi tiết:**
+>
+> - **Quan sát trực quan:** Biểu đồ thể hiện mức độ phân tán thu nhập
+>   cực kỳ đều đặn giữa các châu lục. Mặc dù Mỹ (USA) và Anh (UK) thường
+>   được coi là thị trường trả lương cao, biểu đồ Violin của họ không có
+>   sự khác biệt rõ nét so với các khu vực như Châu Á (Asia) hay Trung
+>   Đông (Middle East).
+>
+> - **Phân tích ý nghĩa:** Trong kỷ nguyên toàn cầu hóa của thị trường
+>   làm việc tự do (freelance), ranh giới địa lý và chênh lệch mức sống
+>   đã bị xóa nhòa đáng kể. Khách hàng từ Châu Á hoàn toàn có thể trả
+>   mức giá tương đương với khách hàng từ Châu Âu cho cùng một chất
+>   lượng công việc hoàn thành.
+>
+> - **Hàm ý thực tiễn:** Freelancer không nên giới hạn bản thân vào việc
+>   chỉ tìm kiếm khách hàng ở các quốc gia phương Tây với hy vọng có
+>   "thu nhập ngoại tệ cao". Thay vào đó, hãy mở rộng tệp khách hàng
+>   trên toàn cầu, miễn là khách hàng có ngân sách tốt và dự án phù hợp
+>   với năng lực.
+
+------------------------------------------------------------------------
+
+## 2.2 Mối quan hệ giữa Client_Rating và Rehire_Rate
+
+Để kiểm tra giả thuyết: *"Freelancer được khách hàng đánh giá cao
+(Client_Rating) thì có tỷ lệ được thuê lại (Rehire_Rate) nhiều hơn
+không?"*, chúng ta thực hiện vẽ biểu đồ điểm phân tán.
+
+Nhằm tránh hiện tượng chồng lấp điểm dữ liệu (**overplotting**), chúng
+ta áp dụng kỹ thuật **jittering** và thêm đường xu hướng hồi quy cho
+từng cấp độ kinh nghiệm.
+
+```{r rating-rehire}
+ggplot(freelancer, aes(x = Client_Rating, y = Rehire_Rate, color = Experience_Level)) +
+  geom_jitter(alpha = 0.55, size = 1.8, width = 0.08, height = 0.6) +
+  geom_smooth(method = "lm", formula = y ~ x, color = "darkred", size = 1.2, se = TRUE) +
+  scale_color_viridis_d(option = "cividis", name = "Cấp độ kinh nghiệm") +
+  labs(title = "Liên kết giữa Điểm đánh giá (Client Rating) và Tỷ lệ thuê lại (Rehire Rate)",
+       subtitle = "Điểm dữ liệu được phân tách theo kinh nghiệm và có thêm đường xu hướng hồi quy",
+       x = "Điểm đánh giá của khách hàng (Client Rating)",
+       y = "Tỷ lệ thuê lại (%)") +
+  theme_minimal() +
+  theme(legend.position = "bottom",
+        plot.title = element_text(face = "bold", size = 14))
+```
+
+> **Nhận định chi tiết:**
+>
+> - **Quan sát trực quan:** Đồ thị phân tán (Scatter Plot) cho thấy sự
+>   hỗn loạn hoàn toàn của các điểm dữ liệu. Đường xu hướng (Trendline)
+>   màu đỏ nằm gần như ngang hoặc hơi dốc xuống một cách không đáng kể.
+>   Sự phân bố màu sắc (đại diện cho Cấp độ kinh nghiệm) hoàn toàn trộn
+>   lẫn vào nhau không theo quy luật.
+>
+> - **Phân tích ý nghĩa:** Trái với tư duy logic thông thường ("làm tốt,
+>   điểm cao thì sẽ được khách hàng thuê lại"), đồ thị chứng minh
+>   **không hề có tương quan tuyến tính** giữa điểm đánh giá
+>   (`Client_Rating`) và tỷ lệ tái hợp tác (`Rehire_Rate`). Một
+>   freelancer nhận đánh giá tuyệt đối 5 sao hoàn toàn có thể có tỷ lệ
+>   thuê lại ở mức rất thấp (20%), và ngược lại, người bị đánh giá 3 sao
+>   vẫn có thể được thuê lại tới 80%.
+>
+> - **Hàm ý thực tiễn:** Điều này ngụ ý rằng tỷ lệ quay lại của khách
+>   hàng phụ thuộc vào bản chất của dự án (ví dụ: dự án thiết kế bộ nhận
+>   diện thương hiệu thường chỉ làm 1 lần nên không có nhu cầu thuê lại)
+>   hoặc do yếu tố ngân sách cạn kiệt, chứ không nằm ở mức độ hài lòng
+>   về thái độ (thể hiện qua số sao). Freelancer không nên quá áp lực
+>   nếu tỷ lệ Rehire Rate của mình không cao.
+
+------------------------------------------------------------------------
+
+## 2.3 Sự kết hợp đa chiều: Experience_Level × Platform
+
+Thay vì sử dụng Boxplot đơn biến dễ trùng lắp với Phần 1, chúng ta xây
+dựng biểu đồ **Heatmap 2 chiều** nhằm so sánh tương tác giữa hai biến
+định tính (`Experience_Level` và `Platform`) lên mức **Thu nhập trung vị
+(Median Earnings_USD)**.
+
+```{r exp-platform-heatmap}
+# Tính toán thu nhập trung vị theo sự kết hợp của 2 biến
+heatmap_data <- freelancer %>%
+  group_by(Experience_Level, Platform) %>%
+  summarise(Median_Earnings = median(Earnings_USD), .groups = "drop")
+
+ggplot(heatmap_data, aes(x = Platform, y = Experience_Level, fill = Median_Earnings)) +
+  geom_tile(color = "white", lwd = 1.2, linetype = 1) +
+  geom_text(aes(label = dollar(round(Median_Earnings))), color = "white", fontface = "bold", size = 4) +
+  scale_fill_viridis_c(option = "magma", labels = dollar, name = "Thu nhập Trung vị") +
+  labs(title = "Heatmap: Sự tương tác giữa Kinh nghiệm và Nền tảng tới Thu nhập",
+       subtitle = "Màu đậm biểu thị mức thu nhập trung vị cao hơn",
+       x = "Nền tảng (Platform)", y = "Cấp độ kinh nghiệm") +
+  theme_minimal() +
+  theme(panel.grid = element_blank(),
+        plot.title = element_text(face = "bold", size = 14))
+```
+
+> **Nhận định chi tiết:**
+>
+> - **Quan sát trực quan:** Bản đồ nhiệt (Heatmap) cung cấp một ma trận
+>   so sánh trực quan. Cường độ màu sắc (từ tối đến sáng) cho thấy nhóm
+>   *Beginner* trên Freelancer.com có mức thu nhập trung vị thấp nhất
+>   (màu đen sẫm, \$4,046). Ngược lại, nhóm *Intermediate* trên nền tảng
+>   Fiverr lại đạt mức thu nhập trung vị cao nhất (\$5,458) khi so với
+>   nội bộ nền tảng đó.
+>
+> - **Phân tích ý nghĩa:** Cấp độ kinh nghiệm cao (`Expert`) không phải
+>   là kim bài miễn tử để luôn có thu nhập cao nhất trên mọi mặt trận.
+>   Có một hiện tượng khá thú vị: những người làm ở mức trung bình
+>   (`Intermediate`) lại tối ưu hóa được thu nhập rất tốt trên các nền
+>   tảng bán lẻ dịch vụ (như Fiverr). Toptal - một nền tảng vốn nổi
+>   tiếng tuyển chọn gắt gao - lại thể hiện sự công bằng hơn khi phân bổ
+>   mức thu nhập cao và đồng đều cho cả 3 nhóm kinh nghiệm.
+>
+> - **Hàm ý thực tiễn:** Cần có chiến lược "chọn nền tảng theo trình
+>   độ". Một người mới (Beginner) hoàn toàn có thể kiếm được mức thu
+>   nhập rất tốt trên Upwork (\$5,402) thay vì phải chịu mức thu nhập
+>   thấp khi cạnh tranh gay gắt tại Freelancer.com (\$4,046).
+
+------------------------------------------------------------------------
+
+## 2.4 Chi tiêu Marketing có tương quan với Thu nhập không?
+
+Chúng ta phân tích mối tương quan giữa `Marketing_Spend` (Chi tiêu quảng
+cáo) và `Earnings_USD` (Thu nhập) bằng biểu đồ **Bubble Plot (Biểu đồ
+bong bóng)**. Kích thước của bóng đại diện cho `Job_Completed` (Số job
+hoàn thành) và màu sắc đại diện cho `Project_Type` (Loại dự án).
+
+```{r marketing-earnings}
+ggplot(freelancer, aes(x = Marketing_Spend, y = Earnings_USD)) +
+  geom_point(aes(size = Job_Completed, color = Project_Type), alpha = 0.45) +
+  geom_smooth(method = "lm", formula = y ~ x, color = "black", linetype = "dashed", se = TRUE) +
+  scale_y_continuous(labels = dollar) +
+  scale_x_continuous(labels = dollar) +
+  scale_color_manual(values = c("Fixed" = "#2ca02c", "Hourly" = "#d62728"), name = "Loại dự án") +
+  scale_size_continuous(name = "Số job hoàn thành") +
+  labs(title = "Tương quan giữa Chi tiêu Marketing và Thu nhập",
+       subtitle = "Thể hiện mối quan hệ phức hợp cùng với Loại dự án và Số job hoàn thành",
+       x = "Chi phí Marketing (USD)", y = "Thu nhập (USD)") +
+  theme_minimal() +
+  theme(plot.title = element_text(face = "bold", size = 14),
+        legend.position = "right")
+```
+
+> **Nhận định chi tiết:**
+>
+> - **Quan sát trực quan:** Các bong bóng lơ lửng tạo thành một dải băng
+>   hình chữ nhật rộng. Đường hồi quy đứt nét màu đen nằm song song hoàn
+>   hảo với trục hoành X. Kích thước các bóng (đại diện số Job hoàn
+>   thành) to nhỏ đan xen lộn xộn từ trái sang phải, không hề có xu
+>   hướng lớn dần theo mức tăng của trục X (Chi phí Marketing).
+>
+> - **Phân tích ý nghĩa:** Đồ thị đã bác bỏ hoàn toàn giả thuyết: *"Đầu
+>   tư càng nhiều tiền Marketing thì càng nhận được nhiều dự án và kiếm
+>   nhiều tiền"*. Trong hệ sinh thái dữ liệu này, chi phí Marketing
+>   dường như không mang lại hiệu quả chuyển đổi (ROI) rõ rệt. Những
+>   freelancer không chi đồng quảng cáo nào (\$0) vẫn có những bóng rất
+>   to (hoàn thành số lượng lớn dự án) và kiếm được \$10,000, tương
+>   đương với người chi tối đa \$500.
+>
+> - **Hàm ý thực tiễn:** Thay vì đổ tiền vào chạy quảng cáo (Boost
+>   Profile/Sponsored) trên các nền tảng tự do một cách máy móc,
+>   freelancer nên dồn lực vào việc xây dựng hồ sơ năng lực (Portfolio)
+>   thật tốt, nâng cao kỹ năng chuyên môn và chủ động xin lời giới thiệu
+>   (referral) từ khách hàng cũ để tăng trưởng bền vững.
+
+------------------------------------------------------------------------
+
+## 2.5 Ảnh hưởng của Loại dự án (Project_Type: Fixed vs Hourly) đến thu nhập
+
+Để so sánh chi tiết hình dạng phân phối thu nhập giữa hai nhóm loại dự
+án Cố định (Fixed) và Theo giờ (Hourly), chúng ta sử dụng biểu đồ **mật
+độ chồng lấp (Overlapping Density Plot)**.
+
+```{r project-type-density}
+ggplot(freelancer, aes(x = Earnings_USD, fill = Project_Type)) +
+  geom_density(alpha = 0.5, color = "white", size = 0.6) +
+  scale_x_continuous(labels = dollar) +
+  scale_fill_manual(values = c("Fixed" = "#1f77b4", "Hourly" = "#ff7f0e"), name = "Loại dự án") +
+  labs(title = "Phân phối Mật độ thu nhập theo Loại dự án",
+       subtitle = "So sánh hình dáng phân phối thu nhập của Fixed và Hourly",
+       x = "Thu nhập (USD)", y = "Mật độ phân bổ") +
+  theme_minimal() +
+  theme(plot.title = element_text(face = "bold", size = 14))
+```
+
+> **Nhận định chi tiết:**
+>
+> - **Quan sát trực quan:** Phân phối thu nhập của cả hai hình thức dự
+>   án (Fixed và Hourly) gần như trùng khớp hoàn toàn lên nhau. Mức độ
+>   biến thiên trải dài đặn từ 0 tới khoảng 10,000 USD và không có các
+>   đỉnh (peaks) vút lên rõ rệt ở bất kỳ khoảng thu nhập nào.
+>
+> - **Phân tích ý nghĩa:** Đồ thị dàn đều chứng tỏ thu nhập phân bố rất
+>   đồng đều (uniform distribution) bất kể là làm dự án theo giờ hay cố
+>   định. Điều này khẳng định loại hình dự án (Project Type) không phải
+>   là yếu tố tiên quyết tạo nên sự khác biệt về tổng thu nhập trên thị
+>   trường.
+>
+> - **Hàm ý thực tiễn:** Freelancer không nên quá kén chọn giữa dự án
+>   theo giờ (Hourly) hay dự án cố định (Fixed). Cơ hội đạt được mức thu
+>   nhập cao (\$10,000) tồn tại song song ở cả hai hình thức. Phát hiện
+>   này cũng là cơ sở quan trọng để Thành viên 3 tiếp tục kiểm định sâu
+>   hơn trong mô hình Hồi quy.
