@@ -109,8 +109,9 @@ Final-Project-LT-R-01-Nhom15/
 git clone https://github.com/PHUC-BAO/Final-Project-LT-R-01-Nhom17.git
 
 # 2. Mở RStudio, cài các package cần thiết
-install.packages(c("tidyverse", "ggplot2", "caret", "knitr", 
-                   "broom", "gridExtra", "scales"))
+install.packages(c("tidyverse", "ggplot2", "caret", "knitr",
+                   "broom", "gridExtra", "scales", "viridis",
+                   "lmtest", "sandwich"))
 
 # 3. Chạy lần lượt theo thứ tự
 # Cách 1:
