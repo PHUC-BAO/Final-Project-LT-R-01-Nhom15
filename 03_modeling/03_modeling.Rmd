@@ -16,7 +16,7 @@ knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE,
 ```
 
 # 1 Đọc dữ liệu
-```{r load-data}
+```{r load-data-mod}
 library(tidyverse)
 library(caret)
 library(broom)
